@@ -88,7 +88,7 @@ foreach ($ClawId in $ClawIds) {
 if ($LASTEXITCODE -ne 0) { throw 'OpenClaw configuration validation failed.' }
 
 foreach ($ClawId in $ClawIds) {
-    & openclaw policy check --agent $ClawId --severity-min error --json
+    & openclaw policy check --agent $ClawId --json
     if ($LASTEXITCODE -ne 0) { throw "Policy conformance failed for $ClawId." }
 }
 
