@@ -2,6 +2,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $Deployment = $PSScriptRoot
+$PolicyPath = (Resolve-Path (Join-Path $Deployment 'policy.jsonc')).Path
 
 if (-not (Get-Command openclaw -ErrorAction SilentlyContinue)) {
     throw 'openclaw is not available on PATH.'
@@ -52,6 +53,9 @@ Ensure-PluginLinked -Id 'github-write-policy' -Path (Join-Path $Deployment 'plug
 & openclaw config set plugins.entries.evidence-check.hooks.allowConversationAccess true
 if ($LASTEXITCODE -ne 0) { throw 'Failed to grant evidence-check conversation hook access.' }
 
+& openclaw config set plugins.entries.policy.config.path $PolicyPath
+if ($LASTEXITCODE -ne 0) { throw 'Failed to configure the Policy plugin path.' }
+
 Ensure-OfficialPlugin -Id 'codex' -Spec '@openclaw/codex'
 Ensure-OfficialPlugin -Id 'llama-cpp' -Spec '@openclaw/llama-cpp-provider'
 
@@ -80,7 +84,12 @@ foreach ($ClawId in $ClawIds) {
     if ($LASTEXITCODE -ne 0) { throw "Claw $Operation failed for $ClawId." }
 }
 
-& openclaw policy compare --baseline (Join-Path $Deployment 'policy.jsonc') --policy (Join-Path $Deployment 'policy.jsonc') --json
-if ($LASTEXITCODE -ne 0) { throw 'policy.jsonc failed Policy plugin validation.' }
+& openclaw config validate --json
+if ($LASTEXITCODE -ne 0) { throw 'OpenClaw configuration validation failed.' }
 
-Write-Host 'OpenClaw domain-agent deployment applied.'
+foreach ($ClawId in $ClawIds) {
+    & openclaw policy check --agent $ClawId --severity-min error --json
+    if ($LASTEXITCODE -ne 0) { throw "Policy conformance failed for $ClawId." }
+}
+
+Write-Host 'OpenClaw domain-agent deployment applied and policy-checked.'
