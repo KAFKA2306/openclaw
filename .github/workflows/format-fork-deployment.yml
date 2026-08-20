@@ -1,0 +1,37 @@
+name: Format fork deployment
+
+on:
+  push:
+    branches:
+      - customize/domain-agents
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: customize/domain-agents
+      - uses: ./.github/actions/setup-node-env
+        with:
+          install-deps: true
+          frozen-lockfile: true
+      - name: Format fork deployment files
+        run: pnpm exec oxfmt deployment scripts/check-duplicates.mts .github/workflows/format-fork-deployment.yml --write
+      - name: Commit formatter output
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "No formatter changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deployment scripts/check-duplicates.mts .github/workflows/format-fork-deployment.yml
+          git commit -m "style: format fork deployment"
+          git push origin HEAD:customize/domain-agents
