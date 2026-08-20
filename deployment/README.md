@@ -42,13 +42,13 @@ The server is configured with `GITHUB_TOOLS`, so tools such as `create_or_update
 
 ## Agent schedules
 
-| Agent | Asia/Tokyo schedule |
-| --- | --- |
-| `finance` | hourly at `:00` |
-| `vr-3d` | hourly at `:12` |
-| `games` | hourly at `:24` |
-| `research-data` | hourly at `:36` |
-| `agent-web` | hourly at `:48` |
+| Agent           | Asia/Tokyo schedule |
+| --------------- | ------------------- |
+| `finance`       | hourly at `:00`     |
+| `vr-3d`         | hourly at `:12`     |
+| `games`         | hourly at `:24`     |
+| `research-data` | hourly at `:36`     |
+| `agent-web`     | hourly at `:48`     |
 
 Each cron run uses an isolated session and instructs the agent to advance at most one evidence-backed workline.
 

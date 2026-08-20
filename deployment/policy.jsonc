@@ -4,17 +4,17 @@
       "agentIds": ["finance", "vr-3d", "games", "research-data", "agent-web"],
       "agents": {
         "workspace": {
-          "denyTools": ["exec", "process", "write", "edit", "apply_patch"]
-        }
+          "denyTools": ["exec", "process", "write", "edit", "apply_patch"],
+        },
       },
       "tools": {
         "fs": {
-          "requireWorkspaceOnly": true
+          "requireWorkspaceOnly": true,
         },
         "elevated": {
-          "allow": false
-        }
-      }
-    }
-  }
+          "allow": false,
+        },
+      },
+    },
+  },
 }

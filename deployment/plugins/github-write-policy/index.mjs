@@ -15,7 +15,8 @@ const EXPLICITLY_BLOCKED = new Set([
   "github__pull_request_review_write",
   "github__sub_issue_write",
 ]);
-const WRITE_NAME = /(?:^|__)(?:create|update|delete|push|merge|write|add_|remove_|cancel|rerun|assign|lock|unlock)/i;
+const WRITE_NAME =
+  /(?:^|__)(?:create|update|delete|push|merge|write|add_|remove_|cancel|rerun|assign|lock|unlock)/i;
 
 function configuredAllowedOwners(pluginConfig) {
   const configured = Array.isArray(pluginConfig?.allowedOwners)

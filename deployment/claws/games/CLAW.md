@@ -9,7 +9,17 @@ packages: []
 mcpServers:
   github:
     command: docker
-    args: ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "-e", "GITHUB_TOOLS", "ghcr.io/github/github-mcp-server"]
+    args:
+      [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "-e",
+        "GITHUB_TOOLS",
+        "ghcr.io/github/github-mcp-server",
+      ]
     env:
       GITHUB_PERSONAL_ACCESS_TOKEN: "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       GITHUB_TOOLS: "get_file_contents,get_commit,list_commits,search_code,search_repositories,issue_read,search_issues,pull_request_read,search_pull_requests,actions_get,issue_write,add_issue_comment,create_pull_request"
