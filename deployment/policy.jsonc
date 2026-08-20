@@ -1,0 +1,20 @@
+{
+  "scopes": {
+    "domain-agents": {
+      "agentIds": ["finance", "vr-3d", "games", "research-data", "agent-web"],
+      "agents": {
+        "workspace": {
+          "denyTools": ["exec", "process", "write", "edit", "apply_patch"]
+        }
+      },
+      "tools": {
+        "fs": {
+          "requireWorkspaceOnly": true
+        },
+        "elevated": {
+          "allow": false
+        }
+      }
+    }
+  }
+}

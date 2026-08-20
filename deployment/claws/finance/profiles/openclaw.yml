@@ -1,0 +1,28 @@
+schemaVersion: 1
+agent:
+  tools:
+    allow:
+      - read
+      - web_search
+      - web_fetch
+      - github__get_file_contents
+      - github__get_commit
+      - github__list_commits
+      - github__search_code
+      - github__search_repositories
+      - github__issue_read
+      - github__search_issues
+      - github__pull_request_read
+      - github__search_pull_requests
+      - github__actions_get
+      - github__issue_write
+      - github__add_issue_comment
+      - github__create_pull_request
+    deny: [exec, process, write, edit, apply_patch]
+    fs:
+      workspaceOnly: true
+  memory:
+    search:
+      enabled: true
+      rememberAcrossConversations: true
+      sources: [memory, sessions]
