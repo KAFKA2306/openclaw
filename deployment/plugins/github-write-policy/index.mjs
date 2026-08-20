@@ -16,13 +16,14 @@ const EXPLICITLY_BLOCKED = new Set([
   "github__sub_issue_write",
 ]);
 const WRITE_NAME =
-  /(?:^|__)(?:create|update|delete|push|merge|write|add_|remove_|cancel|rerun|assign|lock|unlock)/i;
+  /(?:^|_)(?:create|update|delete|push|merge|write|add|remove|cancel|rerun|assign|lock|unlock)(?:_|$)/i;
 
 function configuredAllowedOwners(pluginConfig) {
   const configured = Array.isArray(pluginConfig?.allowedOwners)
     ? pluginConfig.allowedOwners.filter((value) => typeof value === "string" && value.length > 0)
     : [];
-  return new Set(configured.length ? configured : ["KAFKA2306"]);
+  const owners = configured.length ? configured : ["KAFKA2306"];
+  return new Set(owners.map((owner) => owner.toLowerCase()));
 }
 
 export default definePluginEntry({
@@ -42,28 +43,40 @@ export default definePluginEntry({
           return;
         }
 
-        const owner = typeof event.params?.owner === "string" ? event.params.owner : undefined;
-        const repo = typeof event.params?.repo === "string" ? event.params.repo : undefined;
+        const requiresApproval = APPROVAL_TOOLS.has(event.toolName);
+        const explicitlyBlocked = EXPLICITLY_BLOCKED.has(event.toolName);
+        const writeLike = WRITE_NAME.test(event.toolName.slice("github__".length));
+        if (!requiresApproval && !explicitlyBlocked && !writeLike) {
+          return;
+        }
 
-        if (owner && !allowedOwners.has(owner)) {
+        const owner = typeof event.params?.owner === "string" ? event.params.owner.trim() : "";
+        const repo = typeof event.params?.repo === "string" ? event.params.repo : undefined;
+        if (!owner) {
+          return {
+            block: true,
+            blockReason: `GitHub mutation tool has no explicit owner: ${event.toolName}`,
+          };
+        }
+        if (!allowedOwners.has(owner.toLowerCase())) {
           return {
             block: true,
             blockReason: `GitHub write outside the configured owner allowlist: ${owner}`,
           };
         }
 
-        if (EXPLICITLY_BLOCKED.has(event.toolName)) {
+        if (explicitlyBlocked) {
           return {
             block: true,
             blockReason: `GitHub mutation tool is blocked by policy: ${event.toolName}`,
           };
         }
 
-        if (APPROVAL_TOOLS.has(event.toolName)) {
+        if (requiresApproval) {
           return {
             requireApproval: {
               title: "Approve GitHub write",
-              description: `${event.toolName}${owner && repo ? ` on ${owner}/${repo}` : ""}`,
+              description: `${event.toolName}${repo ? ` on ${owner}/${repo}` : ` for ${owner}`}`,
               severity: "warning",
               timeoutMs: approvalTimeoutMs,
               allowedDecisions: ["allow-once", "deny"],
@@ -71,12 +84,10 @@ export default definePluginEntry({
           };
         }
 
-        if (WRITE_NAME.test(event.toolName)) {
-          return {
-            block: true,
-            blockReason: `Unexpected GitHub mutation tool is not approved: ${event.toolName}`,
-          };
-        }
+        return {
+          block: true,
+          blockReason: `Unexpected GitHub mutation tool is not approved: ${event.toolName}`,
+        };
       },
       { priority: 100 },
     );
