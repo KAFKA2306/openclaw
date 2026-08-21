@@ -1,0 +1,64 @@
+name: Sync upstream OpenClaw
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream and canonical sync branch
+        run: |
+          git remote add upstream https://github.com/openclaw/openclaw.git
+          git fetch upstream main
+          git fetch origin automation/upstream-sync:refs/remotes/origin/automation/upstream-sync || true
+
+      - name: Reconcile without force-push
+        run: |
+          if git show-ref --verify --quiet refs/remotes/origin/automation/upstream-sync; then
+            git checkout -B automation/upstream-sync origin/automation/upstream-sync
+            git merge --no-edit origin/main
+          else
+            git checkout -b automation/upstream-sync origin/main
+          fi
+          git merge --no-edit upstream/main
+          git push origin automation/upstream-sync
+
+      - name: Open or reuse sync pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet origin/main...automation/upstream-sync; then
+            echo "Fork is already current."
+            exit 0
+          fi
+          existing="$(gh pr list --head automation/upstream-sync --base main --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            echo "Using existing PR #$existing"
+            exit 0
+          fi
+          gh pr create \
+            --head automation/upstream-sync \
+            --base main \
+            --title "chore: sync upstream OpenClaw" \
+            --body "Automated no-force synchronization from openclaw/openclaw:main. Merge conflicts fail the workflow instead of rewriting fork history."

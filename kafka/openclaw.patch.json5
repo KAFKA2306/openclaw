@@ -1,0 +1,24 @@
+{
+  plugins: {
+    entries: {
+      "kafka-operator": {
+        enabled: true,
+        config: {
+          github: {
+            tokenEnv: "GITHUB_TOKEN",
+            allowedOwners: ["KAFKA2306"],
+          },
+          evidence: {
+            enabled: true,
+            agentIds: ["finance", "research-data", "vr-3d", "games", "agent-web"],
+            minChars: 220,
+          },
+          routing: {
+            enabled: false,
+            agentIds: ["finance", "research-data", "vr-3d", "games", "agent-web"],
+          },
+        },
+      },
+    },
+  },
+}

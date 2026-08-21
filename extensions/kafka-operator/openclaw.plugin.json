@@ -1,0 +1,87 @@
+{
+  "id": "kafka-operator",
+  "name": "KAFKA Operator",
+  "description": "Typed GitHub operations, per-write approvals, evidence revision, and optional cheap-task model routing.",
+  "enabledByDefault": false,
+  "activation": {
+    "onStartup": true
+  },
+  "contracts": {
+    "tools": [
+      "kafka_github_repo_state",
+      "kafka_github_issue_create",
+      "kafka_github_branch_create",
+      "kafka_github_pr_create"
+    ]
+  },
+  "uiHints": {
+    "github.tokenEnv": {
+      "label": "GitHub token environment variable",
+      "help": "Environment variable holding the GitHub token. The token itself is never stored in OpenClaw config."
+    },
+    "github.allowedOwners": {
+      "label": "Allowed GitHub owners",
+      "help": "Writes fail closed unless the repository owner is listed here."
+    },
+    "evidence.agentIds": {
+      "label": "Evidence-gated agents",
+      "help": "Agent ids whose material factual answers are revised once when no direct HTTPS source is present."
+    },
+    "routing.provider": {
+      "label": "Cheap-task provider",
+      "help": "Provider used for cheap deterministic tasks when routing is enabled."
+    },
+    "routing.model": {
+      "label": "Cheap-task model",
+      "help": "Exact model id used with the cheap-task provider."
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "github": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tokenEnv": {
+            "type": "string",
+            "default": "GITHUB_TOKEN"
+          },
+          "allowedOwners": {
+            "type": "array",
+            "items": { "type": "string" },
+            "default": []
+          }
+        }
+      },
+      "evidence": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": { "type": "boolean", "default": true },
+          "agentIds": {
+            "type": "array",
+            "items": { "type": "string" },
+            "default": []
+          },
+          "minChars": { "type": "number", "minimum": 1, "default": 220 }
+        }
+      },
+      "routing": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": { "type": "boolean", "default": false },
+          "agentIds": {
+            "type": "array",
+            "items": { "type": "string" },
+            "default": []
+          },
+          "provider": { "type": "string" },
+          "model": { "type": "string" }
+        }
+      }
+    }
+  }
+}
