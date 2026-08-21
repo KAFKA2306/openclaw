@@ -5,15 +5,21 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const jobs = JSON.parse(readFileSync(join(root, "kafka/automations/jobs.json"), "utf8"));
-const expectedAgents = ["finance", "research-data", "vr-3d", "games", "agent-web"];
+const expectedSchedule = new Map([
+  ["finance", 0],
+  ["vr-3d", 12],
+  ["games", 24],
+  ["research-data", 36],
+  ["agent-web", 48],
+]);
 const names = new Set();
 const minutes = new Set();
 
 if (jobs.schemaVersion !== 1 || jobs.timezone !== "Asia/Tokyo") throw new Error("unsupported jobs manifest");
-if (!Array.isArray(jobs.jobs) || jobs.jobs.length !== expectedAgents.length) throw new Error("expected five jobs");
+if (!Array.isArray(jobs.jobs) || jobs.jobs.length !== expectedSchedule.size) throw new Error("expected five jobs");
 
 for (const job of jobs.jobs) {
-  if (!expectedAgents.includes(job.agent)) throw new Error(`unexpected agent ${job.agent}`);
+  if (!expectedSchedule.has(job.agent)) throw new Error(`unexpected agent ${job.agent}`);
   if (names.has(job.name)) throw new Error(`duplicate job name ${job.name}`);
   names.add(job.name);
   const match = /^(\d{1,2}) \* \* \* \*$/.exec(job.cron);
@@ -21,6 +27,8 @@ for (const job of jobs.jobs) {
   const minute = Number(match[1]);
   if (minute < 0 || minute > 59 || minutes.has(minute)) throw new Error(`invalid/duplicate minute ${minute}`);
   minutes.add(minute);
+  const expectedMinute = expectedSchedule.get(job.agent);
+  if (minute !== expectedMinute) throw new Error(`job ${job.name} must run at minute ${expectedMinute}, got ${minute}`);
   if (typeof job.message !== "string" || job.message.length < 80) throw new Error(`job ${job.name} has an underspecified prompt`);
   for (const file of ["AGENTS.md", "CLAUDE.md"]) {
     if (!existsSync(join(root, "kafka", "agents", job.agent, file))) throw new Error(`missing ${job.agent}/${file}`);
@@ -39,4 +47,14 @@ for (const plugin of ["github-operations", "evidence-check"]) {
 }
 
 if (!existsSync(join(root, "kafka", "scripts", "build-plugins.mjs"))) throw new Error("missing plugin build script");
-console.log(`KAFKA customization valid: ${jobs.jobs.length} agents/jobs, ${minutes.size} unique hourly offsets, 2 plugins.`);
+
+const bootstrap = readFileSync(join(root, "kafka/scripts/bootstrap.mjs"), "utf8");
+if (!bootstrap.includes('"automations", "add"')) throw new Error("bootstrap must use the supported `openclaw automations add` command");
+if (bootstrap.includes('"automations", "create"')) throw new Error("unsupported `openclaw automations create` command found");
+
+const configExample = readFileSync(join(root, "kafka/config/openclaw.example.json5"), "utf8");
+if (!configExample.includes("kafka-evidence-check") || !configExample.includes("allowConversationAccess: true")) {
+  throw new Error("config example must explicitly grant conversation access to kafka-evidence-check");
+}
+
+console.log(`KAFKA customization valid: ${jobs.jobs.length} agents/jobs, exact JST offsets, 2 plugins, runtime policy config present.`);
