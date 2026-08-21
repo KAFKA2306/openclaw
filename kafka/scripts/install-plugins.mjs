@@ -47,4 +47,12 @@ for (const plugin of plugins) {
   }
 }
 
-console.log(apply ? "KAFKA plugins installed. Restart the Gateway." : "Dry run complete. Re-run with --apply to build and install plugins.");
+// Non-bundled plugins that inspect natural conversation output must receive an
+// explicit operator-owned permission. Keep activation granular so existing
+// unrelated plugin entries are not replaced.
+exec("openclaw", ["config", "set", "plugins.entries.kafka-github-operations.enabled", "true", "--strict-json"]);
+exec("openclaw", ["config", "set", "plugins.entries.kafka-evidence-check.enabled", "true", "--strict-json"]);
+exec("openclaw", ["config", "set", "plugins.entries.kafka-evidence-check.hooks.allowConversationAccess", "true", "--strict-json"]);
+if (apply) exec("openclaw", ["config", "validate"]);
+
+console.log(apply ? "KAFKA plugins installed and policy config validated. Restart the Gateway." : "Dry run complete. Re-run with --apply to build, install, and configure plugins.");
