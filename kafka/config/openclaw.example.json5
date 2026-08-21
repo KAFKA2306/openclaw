@@ -1,0 +1,29 @@
+// Merge only the relevant keys into the operator-owned openclaw.json.
+// Credentials, tokens, channel bindings, and machine-specific model IDs do not belong here.
+{
+  agents: {
+    ownership: "explicit",
+    defaults: {
+      userTimezone: "Asia/Tokyo",
+      contextInjection: "continuation-skip",
+    },
+    entries: {
+      "local-worker": { workspace: "~/.openclaw/workspace-local-worker" },
+    },
+  },
+  plugins: {
+    entries: {
+      "kafka-github-operations": {
+        enabled: true,
+      },
+      "kafka-evidence-check": {
+        enabled: true,
+        hooks: {
+          // before_agent_finalize receives the natural assistant answer, so an
+          // external plugin must be granted raw conversation access explicitly.
+          allowConversationAccess: true,
+        },
+      },
+    },
+  },
+}

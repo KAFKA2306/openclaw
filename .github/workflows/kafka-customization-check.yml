@@ -1,0 +1,49 @@
+name: KAFKA customization check
+
+on:
+  pull_request:
+    paths:
+      - "kafka/**"
+      - ".github/workflows/kafka-*.yml"
+  push:
+    branches: [main]
+    paths:
+      - "kafka/**"
+      - ".github/workflows/kafka-*.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.15.0"
+      - name: Enable repository-pinned pnpm
+        run: |
+          corepack enable
+          pnpm --version
+      - name: Install repository dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Check Node scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for script in kafka/scripts/*.mjs; do
+            node --check "$script"
+          done
+      - name: Build external-style plugins
+        run: node kafka/scripts/build-plugins.mjs
+      - name: Validate customization contracts
+        run: node kafka/scripts/validate.mjs
+      - name: Verify plugin package contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          for plugin in github-operations evidence-check; do
+            (cd "kafka/plugins/$plugin" && npm pack --dry-run --json >/dev/null)
+          done

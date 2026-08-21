@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 2,
+  "timezone": "Asia/Tokyo",
+  "agents": ["local-worker"],
+  "jobs": []
+}
