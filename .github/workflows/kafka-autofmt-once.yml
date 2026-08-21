@@ -1,0 +1,49 @@
+name: KAFKA one-shot formatter
+
+on:
+  push:
+    branches:
+      - kafka/customization-foundation
+    paths:
+      - .github/workflows/kafka-autofmt-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.repository == 'KAFKA2306/openclaw' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: kafka/customization-foundation
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Enable repository-pinned pnpm
+        run: corepack enable
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Format fork overlay
+        run: |
+          pnpm exec oxfmt \
+            kafka/ROADMAP.md \
+            kafka/plugins/github-operations/index.ts \
+            kafka/scripts/bootstrap.mjs \
+            kafka/scripts/build-plugins.mjs \
+            kafka/scripts/export-runtime-state.mjs \
+            kafka/scripts/install-plugins.mjs \
+            kafka/scripts/validate.mjs \
+            scripts/check-duplicates.mts
+          rm .github/workflows/kafka-autofmt-once.yml
+      - name: Commit exact formatter output and remove this workflow
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "style(kafka): apply repository formatter"
+          git push origin HEAD:kafka/customization-foundation
