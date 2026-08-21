@@ -49,12 +49,20 @@ for (const plugin of ["github-operations", "evidence-check"]) {
 if (!existsSync(join(root, "kafka", "scripts", "build-plugins.mjs"))) throw new Error("missing plugin build script");
 
 const bootstrap = readFileSync(join(root, "kafka/scripts/bootstrap.mjs"), "utf8");
-if (!bootstrap.includes('"automations", "add"')) throw new Error("bootstrap must use the supported `openclaw automations add` command");
-if (bootstrap.includes('"automations", "create"')) throw new Error("unsupported `openclaw automations create` command found");
+const usesAutomationMutation = bootstrap.includes('"automations", "add"') || bootstrap.includes('"automations", "create"');
+if (!usesAutomationMutation) throw new Error("bootstrap must use `openclaw automations add` or its supported `create` alias");
+for (const required of ['"--session", "isolated"', '"--agent", job.agent', '"--exact"']) {
+  if (!bootstrap.includes(required)) throw new Error(`bootstrap automation contract missing ${required}`);
+}
 
 const configExample = readFileSync(join(root, "kafka/config/openclaw.example.json5"), "utf8");
 if (!configExample.includes("kafka-evidence-check") || !configExample.includes("allowConversationAccess: true")) {
   throw new Error("config example must explicitly grant conversation access to kafka-evidence-check");
+}
+
+const installer = readFileSync(join(root, "kafka/scripts/install-plugins.mjs"), "utf8");
+if (!installer.includes("plugins.entries.kafka-evidence-check.hooks.allowConversationAccess")) {
+  throw new Error("plugin installer must activate the non-bundled evidence hook conversation-access permission");
 }
 
 console.log(`KAFKA customization valid: ${jobs.jobs.length} agents/jobs, exact JST offsets, 2 plugins, runtime policy config present.`);
