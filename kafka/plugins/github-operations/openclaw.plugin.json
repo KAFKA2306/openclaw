@@ -1,0 +1,14 @@
+{
+  "id": "kafka-github-operations",
+  "name": "KAFKA GitHub Operations",
+  "description": "Typed, owner-scoped GitHub repository metadata operations with approval-gated writes.",
+  "contracts": {
+    "tools": [
+      "kafka_github_get_repository",
+      "kafka_github_create_issue",
+      "kafka_github_create_pull_request"
+    ]
+  },
+  "activation": { "onStartup": true },
+  "configSchema": { "type": "object", "additionalProperties": false }
+}

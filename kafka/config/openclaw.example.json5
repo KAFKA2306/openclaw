@@ -1,0 +1,18 @@
+// Merge the relevant keys into the operator-owned openclaw.json.
+// Credentials, tokens, channel bindings, and machine-specific model IDs do not belong here.
+{
+  agents: {
+    ownership: "explicit",
+    defaults: {
+      userTimezone: "Asia/Tokyo",
+      contextInjection: "continuation-skip",
+    },
+    entries: {
+      finance: { workspace: "~/.openclaw/workspace-finance" },
+      "research-data": { workspace: "~/.openclaw/workspace-research-data" },
+      "vr-3d": { workspace: "~/.openclaw/workspace-vr-3d" },
+      games: { workspace: "~/.openclaw/workspace-games" },
+      "agent-web": { workspace: "~/.openclaw/workspace-agent-web" },
+    },
+  },
+}

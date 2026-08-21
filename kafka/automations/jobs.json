@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "timezone": "Asia/Tokyo",
+  "jobs": [
+    {
+      "name": "kafka-finance-hourly",
+      "agent": "finance",
+      "cron": "0 * * * *",
+      "message": "Inspect the finance domain's current repositories and evidence. Select the highest-value unresolved issue, improve it using current primary evidence and repository state, and leave a concrete auditable result. Do not invent progress."
+    },
+    {
+      "name": "kafka-research-data-hourly",
+      "agent": "research-data",
+      "cron": "12 * * * *",
+      "message": "Inspect the research-data domain's current repositories and evidence. Select the highest-value unresolved issue, improve it using current primary evidence and repository state, and leave a concrete auditable result. Do not invent progress."
+    },
+    {
+      "name": "kafka-vr-3d-hourly",
+      "agent": "vr-3d",
+      "cron": "24 * * * *",
+      "message": "Inspect the VR/3D domain's current repositories and evidence. Select the highest-value unresolved issue, improve it using current primary evidence and repository state, and leave a concrete auditable result. Do not invent progress."
+    },
+    {
+      "name": "kafka-games-hourly",
+      "agent": "games",
+      "cron": "36 * * * *",
+      "message": "Inspect the games domain's current repositories and evidence. Select the highest-value unresolved issue, improve it using current primary evidence and repository state, and leave a concrete auditable result. Do not invent progress."
+    },
+    {
+      "name": "kafka-agent-web-hourly",
+      "agent": "agent-web",
+      "cron": "48 * * * *",
+      "message": "Inspect the agent/web domain's current repositories and evidence. Select the highest-value unresolved issue, improve it using current primary evidence and repository state, and leave a concrete auditable result. Do not invent progress."
+    }
+  ]
+}

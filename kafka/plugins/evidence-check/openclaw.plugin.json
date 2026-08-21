@@ -1,0 +1,7 @@
+{
+  "id": "kafka-evidence-check",
+  "name": "KAFKA Evidence Check",
+  "description": "Requests one revision when research-like factual/current output lacks source URLs.",
+  "activation": { "onStartup": true },
+  "configSchema": { "type": "object", "additionalProperties": false }
+}

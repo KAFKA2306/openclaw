@@ -1,0 +1,94 @@
+#!/usr/bin/env node
+import { readFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { spawnSync } from "node:child_process";
+
+const here = dirname(fileURLToPath(import.meta.url));
+const root = resolve(here, "../..");
+const apply = process.argv.includes("--apply");
+const jobs = JSON.parse(readFileSync(join(root, "kafka/automations/jobs.json"), "utf8"));
+const agents = jobs.jobs.map((job) => job.agent);
+
+function run(args, { allowFailure = false } = {}) {
+  if (!apply) {
+    console.log(`[dry-run] openclaw ${args.map((x) => JSON.stringify(x)).join(" ")}`);
+    return { status: 0, stdout: "", stderr: "" };
+  }
+  const result = spawnSync("openclaw", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  if (result.error) throw result.error;
+  if (result.status !== 0 && !allowFailure) {
+    throw new Error(`openclaw ${args[0]} failed (${result.status}): ${result.stderr || result.stdout}`);
+  }
+  return result;
+}
+
+function workspaceFor(agent) {
+  return join(homedir(), ".openclaw", `workspace-${agent}`);
+}
+
+function extractNames(text) {
+  try {
+    const data = JSON.parse(text);
+    const queue = [data];
+    const names = new Set();
+    while (queue.length) {
+      const value = queue.pop();
+      if (Array.isArray(value)) {
+        for (const item of value) queue.push(item);
+      } else if (value && typeof value === "object") {
+        for (const key of ["id", "name", "agentId"]) {
+          if (typeof value[key] === "string") names.add(value[key]);
+        }
+        for (const child of Object.values(value)) queue.push(child);
+      }
+    }
+    return names;
+  } catch {
+    return new Set();
+  }
+}
+
+const agentList = run(["agents", "list", "--json"], { allowFailure: true });
+const existingAgents = extractNames(agentList.stdout || "");
+
+for (const agent of agents) {
+  const workspace = workspaceFor(agent);
+  if (!existingAgents.has(agent)) {
+    run(["agents", "add", agent, "--workspace", workspace, "--non-interactive"]);
+  } else {
+    console.log(`[ok] agent exists: ${agent}`);
+  }
+  if (apply) {
+    mkdirSync(workspace, { recursive: true });
+    const template = join(root, "kafka", "agents", agent, "AGENTS.md");
+    if (existsSync(template)) {
+      copyFileSync(template, join(workspace, "AGENTS.md"));
+      copyFileSync(template, join(workspace, "CLAUDE.md"));
+    }
+  }
+}
+
+const automationList = run(["automations", "list", "--all", "--json"], { allowFailure: true });
+const fallbackList = automationList.status === 0 ? automationList : run(["automations", "list", "--all"], { allowFailure: true });
+const listed = `${fallbackList.stdout || ""}\n${fallbackList.stderr || ""}`;
+const automationNames = extractNames(fallbackList.stdout || "");
+
+for (const job of jobs.jobs) {
+  if (automationNames.has(job.name) || listed.includes(job.name)) {
+    console.log(`[ok] automation exists: ${job.name}`);
+    continue;
+  }
+  run([
+    "automations", "create", job.cron, job.message,
+    "--name", job.name,
+    "--tz", jobs.timezone,
+    "--session", "isolated",
+    "--agent", job.agent,
+    "--no-deliver",
+    "--exact",
+  ]);
+}
+
+console.log(apply ? "KAFKA OpenClaw bootstrap applied." : "Dry run complete. Re-run with --apply to mutate local OpenClaw state.");

@@ -1,0 +1,12 @@
+{
+  "name": "@kafka2306/openclaw-evidence-check",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "files": ["dist", "openclaw.plugin.json"],
+  "peerDependencies": { "openclaw": ">=2026.8.1" },
+  "openclaw": {
+    "extensions": ["./dist/index.js"],
+    "compat": { "pluginApi": ">=2026.8.1", "minGatewayVersion": "2026.8.1" }
+  }
+}
