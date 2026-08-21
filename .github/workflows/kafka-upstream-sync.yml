@@ -3,10 +3,11 @@ name: KAFKA upstream sync
 on:
   workflow_dispatch:
   schedule:
-    - cron: "7 * * * *"
+    - cron: "17 */6 * * *"
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: kafka-openclaw-upstream-sync
@@ -20,17 +21,43 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Merge upstream main without force-pushing
-        shell: bash
+      - name: Configure Git identity
         run: |
-          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Fetch upstream and canonical sync branch
+        run: |
           git remote add upstream https://github.com/openclaw/openclaw.git
           git fetch --no-tags upstream main
-          if git merge-base --is-ancestor upstream/main HEAD; then
-            echo "Fork already contains upstream/main."
-            exit 0
+          git fetch origin automation/upstream-sync:refs/remotes/origin/automation/upstream-sync || true
+      - name: Reconcile without force-pushing
+        run: |
+          set -euo pipefail
+          if git show-ref --verify --quiet refs/remotes/origin/automation/upstream-sync; then
+            git checkout -B automation/upstream-sync origin/automation/upstream-sync
+            git merge --no-edit origin/main
+          else
+            git checkout -b automation/upstream-sync origin/main
           fi
           git merge --no-edit upstream/main
-          git push origin HEAD:main
+          git push origin automation/upstream-sync
+      - name: Open or reuse sync pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet origin/main...automation/upstream-sync; then
+            echo "Fork is already current. Removing an unnecessary sync branch if present."
+            git push origin --delete automation/upstream-sync || true
+            exit 0
+          fi
+          existing="$(gh pr list --head automation/upstream-sync --base main --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            echo "Using existing PR #$existing"
+            exit 0
+          fi
+          gh pr create \
+            --head automation/upstream-sync \
+            --base main \
+            --title "chore: sync upstream OpenClaw" \
+            --body "Automated no-force synchronization from openclaw/openclaw:main. Merge conflicts fail instead of rewriting fork history. The sync branch is disposable and is removed when it no longer differs from main."

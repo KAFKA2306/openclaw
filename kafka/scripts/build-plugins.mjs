@@ -29,9 +29,13 @@ for (const plugin of plugins) {
     ],
     { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
   );
-  if (result.error) throw result.error;
+  if (result.error) {
+    throw result.error;
+  }
   if (result.status !== 0) {
-    throw new Error(`esbuild failed for ${plugin} (${result.status}): ${result.stderr || result.stdout}`);
+    throw new Error(
+      `esbuild failed for ${plugin} (${result.status}): ${result.stderr || result.stdout}`,
+    );
   }
   console.log(`[built] ${plugin}`);
 }

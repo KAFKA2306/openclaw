@@ -31,8 +31,8 @@ const targets = [
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs"]);
 const sourcePattern = "**/*.{ts,tsx,js,mjs,cjs}";
 const testPattern = "**/*.{test,e2e.test,live.test}.{ts,tsx,js,mjs,cjs}";
-// Keep local agent support trees and vendored snapshots classified but outside jscpd.
-const intentionallyUnscannedPrefixes = [".agents/", "vendor/"];
+// Keep local agent support trees, fork overlays, and vendored snapshots classified but outside jscpd.
+const intentionallyUnscannedPrefixes = [".agents/", "kafka/", "vendor/"];
 
 const generatedIgnores = [
   "**/node_modules/**",
@@ -107,7 +107,10 @@ function listTrackedSourceFiles() {
     .filter(Boolean)
     .map(normalizeRepoPath)
     .filter((file) => sourceExtensions.has(path.extname(file)))
-    .filter((file) => !intentionallyUnscannedPrefixes.some((prefix) => isUnderPrefix(file, prefix)))
+    .filter(
+      (file) =>
+        !intentionallyUnscannedPrefixes.some((prefix) => isUnderPrefix(file, prefix)),
+    )
     .toSorted((left, right) => left.localeCompare(right));
 }
 

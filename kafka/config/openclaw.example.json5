@@ -1,4 +1,4 @@
-// Merge the relevant keys into the operator-owned openclaw.json.
+// Merge only the relevant keys into the operator-owned openclaw.json.
 // Credentials, tokens, channel bindings, and machine-specific model IDs do not belong here.
 {
   agents: {
@@ -8,11 +8,7 @@
       contextInjection: "continuation-skip",
     },
     entries: {
-      finance: { workspace: "~/.openclaw/workspace-finance" },
-      "vr-3d": { workspace: "~/.openclaw/workspace-vr-3d" },
-      games: { workspace: "~/.openclaw/workspace-games" },
-      "research-data": { workspace: "~/.openclaw/workspace-research-data" },
-      "agent-web": { workspace: "~/.openclaw/workspace-agent-web" },
+      "local-worker": { workspace: "~/.openclaw/workspace-local-worker" },
     },
   },
   plugins: {
