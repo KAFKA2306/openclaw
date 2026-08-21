@@ -4,9 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const manifest = JSON.parse(
-  readFileSync(join(root, "kafka/automations/jobs.json"), "utf8"),
-);
+const manifest = JSON.parse(readFileSync(join(root, "kafka/automations/jobs.json"), "utf8"));
 
 if (manifest.schemaVersion !== 2 || manifest.timezone !== "Asia/Tokyo") {
   throw new Error("unsupported KAFKA automation manifest");
@@ -27,9 +25,7 @@ if (!existsSync(join(root, "kafka", "agents", "local-worker", "AGENTS.md"))) {
 for (const plugin of ["github-operations", "evidence-check"]) {
   const dir = join(root, "kafka", "plugins", plugin);
   const pkg = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
-  const pluginManifest = JSON.parse(
-    readFileSync(join(dir, "openclaw.plugin.json"), "utf8"),
-  );
+  const pluginManifest = JSON.parse(readFileSync(join(dir, "openclaw.plugin.json"), "utf8"));
   if (pkg.type !== "module") {
     throw new Error(`${plugin}: package must be ESM`);
   }
@@ -81,18 +77,12 @@ if (!githubOperations.includes("kafka_github_create_pull_request")) {
   throw new Error("local-worker GitHub plugin must retain approval-gated PR creation");
 }
 
-const evidenceCheck = readFileSync(
-  join(root, "kafka/plugins/evidence-check/index.ts"),
-  "utf8",
-);
+const evidenceCheck = readFileSync(join(root, "kafka/plugins/evidence-check/index.ts"), "utf8");
 if (!evidenceCheck.includes('["local-worker"]')) {
   throw new Error("evidence-check must target local-worker by default");
 }
 
-const configExample = readFileSync(
-  join(root, "kafka/config/openclaw.example.json5"),
-  "utf8",
-);
+const configExample = readFileSync(join(root, "kafka/config/openclaw.example.json5"), "utf8");
 if (
   !configExample.includes('"local-worker"') ||
   !configExample.includes("kafka-evidence-check") ||

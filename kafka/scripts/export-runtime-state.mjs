@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
 
 function capture(args) {
   const result = spawnSync("openclaw", args, {
@@ -35,9 +35,7 @@ const snapshot = {
   schemaVersion: 1,
   generatedAt: new Date().toISOString(),
   source: "openclaw-local-runtime",
-  agents: jsonOrRaw(
-    captureWithFallback(["agents", "list", "--json"], ["agents", "list"]),
-  ),
+  agents: jsonOrRaw(captureWithFallback(["agents", "list", "--json"], ["agents", "list"])),
   automations: jsonOrRaw(
     captureWithFallback(
       ["automations", "list", "--all", "--json"],

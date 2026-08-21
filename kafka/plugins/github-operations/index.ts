@@ -1,5 +1,5 @@
-import { Type } from "typebox";
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
+import { Type } from "typebox";
 
 const API = "https://api.github.com";
 const writeTools = new Set(["kafka_github_create_pull_request"]);
@@ -122,10 +122,7 @@ export default definePluginEntry({
     });
 
     api.on("before_tool_call", (event) => {
-      if (
-        !writeTools.has(event.toolName) ||
-        process.env.KAFKA_GITHUB_REQUIRE_APPROVAL === "0"
-      ) {
+      if (!writeTools.has(event.toolName) || process.env.KAFKA_GITHUB_REQUIRE_APPROVAL === "0") {
         return;
       }
       return {

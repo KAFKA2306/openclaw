@@ -107,10 +107,7 @@ function listTrackedSourceFiles() {
     .filter(Boolean)
     .map(normalizeRepoPath)
     .filter((file) => sourceExtensions.has(path.extname(file)))
-    .filter(
-      (file) =>
-        !intentionallyUnscannedPrefixes.some((prefix) => isUnderPrefix(file, prefix)),
-    )
+    .filter((file) => !intentionallyUnscannedPrefixes.some((prefix) => isUnderPrefix(file, prefix)))
     .toSorted((left, right) => left.localeCompare(right));
 }
 

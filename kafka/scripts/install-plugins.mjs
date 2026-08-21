@@ -1,9 +1,9 @@
 #!/usr/bin/env node
+import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { spawnSync } from "node:child_process";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../..");
@@ -25,9 +25,7 @@ function exec(command, args, cwd = root) {
     throw result.error;
   }
   if (result.status !== 0) {
-    throw new Error(
-      `${command} failed (${result.status}): ${result.stderr || result.stdout}`,
-    );
+    throw new Error(`${command} failed (${result.status}): ${result.stderr || result.stdout}`);
   }
   return result;
 }
@@ -52,12 +50,7 @@ for (const plugin of plugins) {
       if (!tgz) {
         throw new Error(`npm pack did not return an archive for ${plugin}`);
       }
-      exec("openclaw", [
-        "plugins",
-        "install",
-        `npm-pack:${join(out, basename(tgz))}`,
-        "--force",
-      ]);
+      exec("openclaw", ["plugins", "install", `npm-pack:${join(out, basename(tgz))}`, "--force"]);
     }
   } finally {
     rmSync(out, { recursive: true, force: true });

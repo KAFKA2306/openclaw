@@ -1,17 +1,15 @@
 #!/usr/bin/env node
+import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { spawnSync } from "node:child_process";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../..");
 const apply = process.argv.includes("--apply");
 const retireLegacyHourly = process.argv.includes("--retire-legacy-hourly");
-const manifest = JSON.parse(
-  readFileSync(join(root, "kafka/automations/jobs.json"), "utf8"),
-);
+const manifest = JSON.parse(readFileSync(join(root, "kafka/automations/jobs.json"), "utf8"));
 const agents = manifest.agents ?? [];
 const jobs = manifest.jobs ?? [];
 const legacyHourlyNames = [
