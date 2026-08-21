@@ -7,16 +7,16 @@ This directory is the fork-specific layer for `KAFKA2306/openclaw`. Upstream Ope
 - five isolated domain-agent workspace templates;
 - declarative hourly automation jobs at distinct minute offsets;
 - a typed GitHub operations plugin with owner allowlisting and approval-gated writes;
-- an evidence-quality finalization plugin that can request one revision when research-like answers contain factual/current claims without source URLs;
+- an evidence-quality finalization plugin that can request one bounded revision when research-like factual/current answers lack source URLs;
 - a cross-platform Node bootstrapper for agents and automations;
-- a package installer for the two local plugins;
+- build/package/install scripts for the two external-style local plugins;
 - a read-only runtime-state exporter for local operations tooling;
 - an hourly, non-force upstream synchronization workflow;
-- validation for fork-specific files.
+- fork-specific syntax, build, packaging, and manifest validation.
 
 ## Activate locally
 
-From the repository root:
+From the repository root after installing the normal OpenClaw checkout dependencies:
 
 ```bash
 node kafka/scripts/validate.mjs
@@ -27,13 +27,15 @@ node kafka/scripts/bootstrap.mjs --apply
 
 `bootstrap.mjs` is dry-run by default. `--apply` creates missing agents and missing automation jobs. It does not delete existing agents, jobs, sessions, credentials, or bindings.
 
-The plugin installer expects the root OpenClaw checkout dependencies to be available so `pnpm exec tsc` can compile the local plugin packages. It builds package tarballs, installs them through OpenClaw's `npm-pack:` path, and removes the temporary archives afterwards.
+`install-plugins.mjs --apply` compiles each plugin with the repository-pinned `esbuild`, packs it through npm's package path, installs the resulting tarball through OpenClaw's `npm-pack:` installer, and removes temporary package archives afterwards. The generated `dist/` directories stay ignored by Git.
 
 ## Security defaults
 
 GitHub write tools require OpenClaw approval by default. Set `KAFKA_GITHUB_REQUIRE_APPROVAL=0` only on a trusted operator-owned installation where unattended metadata writes are explicitly intended. The plugin never exposes force-push, merge, repository deletion, secret mutation, or file-content mutation tools.
 
 The runtime-state exporter prints to stdout unless `--out <path>` is supplied. Do not publish its output blindly; local agent/session state can be private.
+
+The evidence plugin is an evidence-hygiene gate, not a truth oracle: it can require a source-bearing revision, but a URL alone does not prove a claim. Agents still have to verify the supporting primary evidence.
 
 ## Local model option
 

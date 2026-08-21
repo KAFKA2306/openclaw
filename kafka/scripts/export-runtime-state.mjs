@@ -12,6 +12,11 @@ function capture(args) {
   };
 }
 
+function captureWithFallback(primary, fallback) {
+  const first = capture(primary);
+  return first.ok || !fallback ? first : capture(fallback);
+}
+
 function jsonOrRaw(result) {
   if (!result.ok) return { ok: false, error: (result.stderr || result.stdout).trim() };
   try { return { ok: true, data: JSON.parse(result.stdout) }; }
@@ -22,8 +27,8 @@ const snapshot = {
   schemaVersion: 1,
   generatedAt: new Date().toISOString(),
   source: "openclaw-local-runtime",
-  agents: jsonOrRaw(capture(["agents", "list", "--json"])),
-  automations: jsonOrRaw(capture(["automations", "list", "--all", "--json"])),
+  agents: jsonOrRaw(captureWithFallback(["agents", "list", "--json"], ["agents", "list"])),
+  automations: jsonOrRaw(captureWithFallback(["automations", "list", "--all", "--json"], ["automations", "list", "--all"])),
   dashboard: jsonOrRaw(capture(["dashboard", "--json"])),
 };
 

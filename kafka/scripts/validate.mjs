@@ -33,7 +33,10 @@ for (const plugin of ["github-operations", "evidence-check"]) {
   const manifest = JSON.parse(readFileSync(join(dir, "openclaw.plugin.json"), "utf8"));
   if (pkg.type !== "module") throw new Error(`${plugin}: package must be ESM`);
   if (manifest.id !== `kafka-${plugin}`) throw new Error(`${plugin}: manifest id mismatch`);
+  if (!Array.isArray(pkg.files) || !pkg.files.includes("dist")) throw new Error(`${plugin}: package must include dist`);
   if (!existsSync(join(dir, "index.ts")) || !existsSync(join(dir, "tsconfig.json"))) throw new Error(`${plugin}: source/config missing`);
+  if (process.env.CI && !existsSync(join(dir, "dist", "index.js"))) throw new Error(`${plugin}: CI must build dist/index.js before validation`);
 }
 
+if (!existsSync(join(root, "kafka", "scripts", "build-plugins.mjs"))) throw new Error("missing plugin build script");
 console.log(`KAFKA customization valid: ${jobs.jobs.length} agents/jobs, ${minutes.size} unique hourly offsets, 2 plugins.`);

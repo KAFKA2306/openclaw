@@ -23,5 +23,26 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24.15.0"
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - name: Install repository dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Check Node scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for script in kafka/scripts/*.mjs; do
+            node --check "$script"
+          done
+      - name: Build external-style plugins
+        run: node kafka/scripts/build-plugins.mjs
       - name: Validate customization contracts
         run: node kafka/scripts/validate.mjs
+      - name: Verify plugin package contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          for plugin in github-operations evidence-check; do
+            (cd "kafka/plugins/$plugin" && npm pack --dry-run --json >/dev/null)
+          done
