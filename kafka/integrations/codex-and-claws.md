@@ -6,13 +6,13 @@ The fork already contains OpenClaw's bundled Codex integration. This KAFKA layer
 
 ## Claws
 
-`openclaw claws` is experimental and packages one new agent's identity, workspace files, plugins/skills/MCP requirements, and cron jobs. Because its schema and lifecycle are explicitly unstable, it is not the canonical deployment format for this fork.
+`openclaw claws` is experimental and packages an agent's identity, workspace files, plugins/skills/MCP requirements, and cron jobs. Its schema and lifecycle are not the canonical deployment format for this fork.
 
 Canonical source of truth here is:
 
-- `kafka/agents/*/AGENTS.md` for domain policy;
-- `kafka/automations/jobs.json` for recurring jobs;
+- `kafka/agents/local-worker/AGENTS.md` for the bounded execution contract;
+- `kafka/automations/jobs.json` for scheduled jobs, which are empty by default;
 - `kafka/plugins/*` for fork-specific capabilities;
-- `kafka/scripts/bootstrap.mjs` for idempotent realization.
+- `kafka/scripts/bootstrap.mjs` for idempotent realization and explicit legacy-hourly retirement.
 
-When the Claw contract stabilizes, these inputs can be generated into one Claw per domain agent without changing the domain definitions themselves.
+If the Claw contract becomes stable enough to use here, generate a single bounded local-worker Claw from these inputs rather than reintroducing domain-discovery agents.
