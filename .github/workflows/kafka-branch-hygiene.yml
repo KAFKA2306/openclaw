@@ -1,0 +1,57 @@
+name: KAFKA branch hygiene
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: kafka-openclaw-branch-hygiene
+  cancel-in-progress: false
+
+jobs:
+  prune:
+    if: github.repository == 'KAFKA2306/openclaw'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete orphan task branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          default_branch="$(gh repo view "$GITHUB_REPOSITORY" --json defaultBranchRef --jq '.defaultBranchRef.name')"
+          mapfile -t open_heads < <(
+            gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 1000 --json headRefName --jq '.[].headRefName'
+          )
+
+          is_open_head() {
+            local branch="$1"
+            local candidate
+            for candidate in "${open_heads[@]}"; do
+              if [ "$candidate" = "$branch" ]; then
+                return 0
+              fi
+            done
+            return 1
+          }
+
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/branches?per_page=100" \
+            --jq '.[] | [.name, .protected] | @tsv' |
+          while IFS=$'\t' read -r branch protected; do
+            if [ "$branch" = "$default_branch" ] || [ "$protected" = "true" ]; then
+              echo "[keep] $branch"
+              continue
+            fi
+            if is_open_head "$branch"; then
+              echo "[keep open PR head] $branch"
+              continue
+            fi
+            encoded="$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$branch")"
+            echo "[delete orphan] $branch"
+            gh api --method DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${encoded}"
+          done
